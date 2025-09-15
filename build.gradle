@@ -88,7 +88,7 @@ dependencies {
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'junit', module: 'junit'
 	}
-	testImplementation('org.testcontainers:cassandra:1.10.4')
+	testImplementation('org.testcontainers:cassandra:1.16.0')
 	testImplementation('io.dropwizard.metrics:metrics-core:3.2.6')
 	testImplementation('io.projectreactor:reactor-test:3.2.3.RELEASE')
 }
