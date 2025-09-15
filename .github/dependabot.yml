@@ -1,0 +1,44 @@
+version: 2
+updates:
+- package-ecosystem: gradle
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "13:00"
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: io.dropwizard.metrics:metrics-core
+    versions:
+    - 4.1.17
+    - 4.1.18
+    - 4.1.19
+  - dependency-name: io.projectreactor:reactor-core
+    versions:
+    - 3.4.2
+    - 3.4.3
+    - 3.4.4
+  - dependency-name: io.projectreactor:reactor-test
+    versions:
+    - 3.4.2
+    - 3.4.3
+    - 3.4.4
+  - dependency-name: org.mockito:mockito-core
+    versions:
+    - 3.7.7
+    - 3.8.0
+  - dependency-name: org.testcontainers:cassandra
+    versions:
+    - 1.15.1
+    - 1.15.2
+  - dependency-name: org.junit.jupiter:junit-jupiter-params
+    versions:
+    - 5.7.0
+  - dependency-name: org.junit.jupiter:junit-jupiter-engine
+    versions:
+    - 5.7.0
+  - dependency-name: org.junit.jupiter:junit-jupiter-api
+    versions:
+    - 5.7.0
+  - dependency-name: org.apache.commons:commons-lang3
+    versions:
+    - "3.11"
