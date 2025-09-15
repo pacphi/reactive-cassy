@@ -90,7 +90,7 @@ dependencies {
 	}
 	testImplementation('org.testcontainers:cassandra:1.16.0')
 	testImplementation('io.dropwizard.metrics:metrics-core:3.2.6')
-	testImplementation('io.projectreactor:reactor-test:3.2.3.RELEASE')
+	testImplementation('io.projectreactor:reactor-test:3.4.8')
 }
 
 bootRun {
