@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		gitPropertiesPluginVersion = '2.2.4'
+		gitPropertiesPluginVersion = '2.5.3'
 		springBootVersion = '3.5.6'
 	}
 	repositories {
@@ -23,7 +23,7 @@ apply plugin: 'com.gorylenko.gradle-git-properties'
 
 group = 'io.pivotal'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 1.8
+sourceCompatibility = 21
 
 gitProperties {
 	dateFormat = "yyyy-MM-dd'T'HH:mmZ"
@@ -32,7 +32,7 @@ gitProperties {
 }
 
 jacoco { 
-	toolVersion = "0.8.2" 
+	toolVersion = "0.8.13" 
 }
     
 jacocoTestReport {
@@ -59,7 +59,7 @@ test {
 }
 
 tasks.withType(Test) {
-    if (JavaVersion.current() != JavaVersion.VERSION_1_8) {
+    if (JavaVersion.current() != JavaVersion.VERSION_21) {
         jvmArgs += ["--add-opens", "java.base/java.lang=ALL-UNNAMED"]
     }
 }
@@ -81,10 +81,10 @@ dependencies {
 	implementation('commons-io:commons-io:2.20.0')
 	implementation('org.apache.commons:commons-lang3:3.18.0')
 	testImplementation('org.junit.jupiter:junit-jupiter-api:5.13.4')
-  testImplementation('org.junit.jupiter:junit-jupiter-params:5.13.4')
-  testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.13.4')
-  testImplementation('org.mockito:mockito-core:3.11.2')
-  testImplementation('org.mockito:mockito-junit-jupiter:5.19.0')
+    testImplementation('org.junit.jupiter:junit-jupiter-params:5.13.4')
+    testRuntimeOnly('org.junit.jupiter:junit-jupiter-engine:5.13.4')
+    testImplementation('org.mockito:mockito-core:3.11.2')
+    testImplementation('org.mockito:mockito-junit-jupiter:5.19.0')
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'junit', module: 'junit'
 	}
