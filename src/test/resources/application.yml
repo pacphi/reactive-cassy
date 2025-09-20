@@ -1,8 +1,11 @@
 spring:
-  data:
-    cassandra:
-      keyspace-name: customers
-      schema-action: recreate
-      contact-points:
-      - 127.0.0.1
-      
+  cassandra:
+    keyspace-name: customers
+    schema-action: recreate
+    local-datacenter: datacenter1
+    connection:
+      init-query-timeout: PT30S
+      connect-timeout: PT30S
+    request:
+      timeout: PT30S
+    session-name: reactive-cassy-test

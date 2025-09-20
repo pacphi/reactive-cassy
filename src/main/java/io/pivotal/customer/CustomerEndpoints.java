@@ -1,19 +1,17 @@
 package io.pivotal.customer;
 
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceSupport;
-import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,18 +32,17 @@ public class CustomerEndpoints {
 	private final CustomerRepository repository;
 	private final CustomerResourceAssembler assembler;
 
-	@Autowired
 	public CustomerEndpoints(
 			CustomerRepository repository,
 			CustomerResourceAssembler assembler) {
 		this.repository = repository;
 		this.assembler = assembler;
 	}
-	
-	@GetMapping(value = "/", produces = MediaTypes.HAL_JSON_VALUE)
-	public ResourceSupport root() {
 
-		ResourceSupport rootResource = new ResourceSupport();
+	@GetMapping(value = "/", produces = MediaTypes.HAL_JSON_VALUE)
+	public RepresentationModel<?> root() {
+
+		RepresentationModel<?> rootResource = new RepresentationModel<>();
 
 		rootResource.add(
 			linkTo(methodOn(CustomerEndpoints.class).root()).withSelfRel(),
@@ -54,77 +51,77 @@ public class CustomerEndpoints {
 		// TODO add other links
 		return rootResource;
 	}
-	
+
 	@PostMapping("/customers")
-	Mono<ResponseEntity<Resource<Customer>>> newCustomer(@RequestBody Customer customer) throws URISyntaxException {
+	Mono<ResponseEntity<EntityModel<Customer>>> newCustomer(@RequestBody Customer customer) throws URISyntaxException {
 		Mono<Customer> savedCustomer = repository.save(customer);
-		return savedCustomer.map(c -> 
+		return savedCustomer.map(c ->
 						ResponseEntity
 							.created(
 								Optional.ofNullable(c.getId())
 									.map(id -> linkTo(methodOn(CustomerEndpoints.class).getCustomerById(id)).toUri())
 									.orElseThrow(() -> new RuntimeException("Failed to create customer for some reason")))
-							.body(assembler.toResource(c)));
+							.body(assembler.toModel(c)));
 	}
-	
+
 	@PutMapping("/customers/{id}")
-    public Mono<ResponseEntity<Resource<Customer>>> updateCustomer(@PathVariable(value = "id") UUID id,
+    public Mono<ResponseEntity<EntityModel<Customer>>> updateCustomer(@PathVariable UUID id,
                                                    @RequestBody Customer customer) {
         Mono<Customer> existingCustomer = repository.findById(id);
-        Mono<Customer> updatedCustomer = existingCustomer.flatMap(c -> { return repository.save(Customer.from(c));});
-        return updatedCustomer.map(c -> 
+        Mono<Customer> updatedCustomer = existingCustomer.flatMap(c -> repository.save(Customer.from(c)));
+        return updatedCustomer.map(c ->
                 		ResponseEntity
 							.ok()
 							.location(
 								Optional.ofNullable(c.getId())
 									.map(i -> linkTo(methodOn(CustomerEndpoints.class).getCustomerById(i)).toUri())
 									.orElseThrow(() -> new RuntimeException("Failed to update customer for some reason")))
-							.body(assembler.toResource(c)))
-                		.defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+							.body(assembler.toModel(c)))
+                		.defaultIfEmpty(ResponseEntity.<EntityModel<Customer>>notFound().build());
     }
-	
+
 	@GetMapping(value = "/customers/{id}", produces = MediaTypes.HAL_JSON_VALUE)
-	Mono<ResponseEntity<Resource<Customer>>> getCustomerById(@PathVariable(value = "id") UUID id) {
+	Mono<ResponseEntity<EntityModel<Customer>>> getCustomerById(@PathVariable UUID id) {
 		return repository.findById(id)
-                .map(savedCustomer -> ResponseEntity.ok(assembler.toResource(savedCustomer)))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .map(savedCustomer -> ResponseEntity.ok(assembler.toModel(savedCustomer)))
+                .defaultIfEmpty(ResponseEntity.<EntityModel<Customer>>notFound().build());
 	}
-	
+
 	@GetMapping(value = "/customers", produces = MediaTypes.HAL_JSON_VALUE)
-	Mono<ResponseEntity<Resources<Resource<Customer>>>> getCustomerByNameAttributes(
-			@RequestParam(value = "firstName", required = false) String firstName,
-			@RequestParam(value = "lastName", required = false) String lastName) {
+	Mono<ResponseEntity<CollectionModel<EntityModel<Customer>>>> getCustomerByNameAttributes(
+			@RequestParam(required = false) String firstName,
+			@RequestParam(required = false) String lastName) {
 		if (StringUtils.isNotBlank(lastName) && StringUtils.isBlank(firstName)) {
 			return repository.findByLastName(lastName)
 					.collectList()
-					.map(savedCustomers -> ResponseEntity.ok(assembler.toResources(savedCustomers)))
-			        .defaultIfEmpty(ResponseEntity.notFound().build());
+					.map(savedCustomers -> ResponseEntity.ok(assembler.toCollectionModel(savedCustomers)))
+			        .defaultIfEmpty(ResponseEntity.<CollectionModel<EntityModel<Customer>>>notFound().build());
 		} else if (StringUtils.isNotBlank(firstName) && StringUtils.isBlank(lastName)) {
 			return repository.findByFirstName(firstName)
 					.collectList()
-	        		.map(savedCustomers -> ResponseEntity.ok(assembler.toResources(savedCustomers)))
-	        		.defaultIfEmpty(ResponseEntity.notFound().build());
+	        		.map(savedCustomers -> ResponseEntity.ok(assembler.toCollectionModel(savedCustomers)))
+	        		.defaultIfEmpty(ResponseEntity.<CollectionModel<EntityModel<Customer>>>notFound().build());
 		} else if (StringUtils.isNotBlank(lastName) && StringUtils.isNotBlank(firstName)) {
 			return repository.findByFirstNameInAndLastName(firstName, lastName)
 					.collectList()
-					.map(savedCustomer -> ResponseEntity.ok(assembler.toResources(savedCustomer)))
-					.defaultIfEmpty(ResponseEntity.notFound().build());
+					.map(savedCustomer -> ResponseEntity.ok(assembler.toCollectionModel(savedCustomer)))
+					.defaultIfEmpty(ResponseEntity.<CollectionModel<EntityModel<Customer>>>notFound().build());
 		} else {
-			return Mono.just(ResponseEntity.notFound().build());
+			return Mono.just(ResponseEntity.<CollectionModel<EntityModel<Customer>>>notFound().build());
 		}
 	}
-	
+
 	@DeleteMapping("/customers/{id}")
-    public Mono<ResponseEntity<Void>> deleteCustomer(@PathVariable(value = "id") UUID id) {
+    public Mono<ResponseEntity<Void>> deleteCustomer(@PathVariable UUID id) {
 
         return repository.findById(id)
                 .flatMap(existingCustomer ->
                         repository.delete(existingCustomer)
-                            .then(Mono.just(new ResponseEntity<Void>(HttpStatus.OK)))
+                            .then(Mono.just(ResponseEntity.ok().<Void>build()))
                 )
-                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .defaultIfEmpty(ResponseEntity.<Void>notFound().build());
     }
-	
+
 	@GetMapping(value = "/stream/customers", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<Customer> streamAllCustomers() {
         return repository.findAll();
