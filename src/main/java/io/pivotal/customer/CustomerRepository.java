@@ -17,14 +17,16 @@ public interface CustomerRepository extends ReactiveCrudRepository<Customer, UUI
 	 * @param lastName
 	 * @return
 	 */
+	@AllowFiltering
 	Flux<Customer> findByLastName(String lastName);
-	
+
 	/**
 	 * Derived query selecting by {@code firstName}.
 	 *
 	 * @param firstName
 	 * @return
 	 */
+	@AllowFiltering
 	Flux<Customer> findByFirstName(String firstName);
 
 	/**
@@ -43,6 +45,7 @@ public interface CustomerRepository extends ReactiveCrudRepository<Customer, UUI
 	 * @param lastName
 	 * @return
 	 */
+	@AllowFiltering
 	Flux<Customer> findByLastName(Mono<String> lastName);
 
 	/**
