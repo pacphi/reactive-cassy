@@ -2,57 +2,40 @@ package io.pivotal.customer;
 
 import java.time.Duration;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContextInitializer;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.testcontainers.containers.CassandraContainer;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.cassandra.CassandraContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest
-@ContextConfiguration(
-    initializers = { ReactiveCustomerRepositoryIntegrationTest.TestContainerInitializer.class })
+@Testcontainers
 public class ReactiveCustomerRepositoryIntegrationTest {
 
-	private static CassandraContainer container = 
-			(CassandraContainer) new CassandraContainer()
+	@Container
+	static final CassandraContainer cassandra =
+			new CassandraContainer("cassandra:4.1")
 				.withInitScript("cql/simple.cql")
-				.withExposedPorts(9042)
-				.withStartupTimeout(Duration.ofMinutes(2));
-	
+				.withStartupTimeout(Duration.ofMinutes(3));
+
 	@Autowired CustomerRepository repository;
 
-	@BeforeAll
-    public static void startup() {
-        container.start();
-    }
-
-    @AfterAll
-    public static void shutdown() {
-        container.stop();
-    }
-    
 	/**
 	 * Clear table and insert some rows.
 	 */
 	@BeforeEach
 	public void setUp() {
-		
-		Flux<Customer> deleteAndInsert = repository.deleteAll() 
+
+		Flux<Customer> deleteAndInsert = repository.deleteAll()
 				.thenMany(Flux.just(Customer.builder().withFirstName("Nick").withLastName("Fury").build(),
                 Customer.builder().withFirstName("Tony").withLastName("Stark").build(),
                 Customer.builder().withFirstName("Bruce").withLastName("Banner").build(),
@@ -95,7 +78,6 @@ public class ReactiveCustomerRepositoryIntegrationTest {
 	 * Fetch data using query derivation.
 	 */
 	@Test
-	@Disabled
 	public void shouldQueryDataWithQueryDerivation() {
 		StepVerifier.create(repository.findByLastName("Banner")).expectNextCount(1).verifyComplete();
 	}
@@ -112,7 +94,6 @@ public class ReactiveCustomerRepositoryIntegrationTest {
 	 * Fetch data using query derivation.
 	 */
 	@Test
-	@Disabled
 	public void shouldQueryDataWithDeferredQueryDerivation() {
 		StepVerifier.create(repository.findByLastName(Mono.just("Fury"))).expectNextCount(1).verifyComplete();
 	}
@@ -127,20 +108,14 @@ public class ReactiveCustomerRepositoryIntegrationTest {
 				.expectNextCount(1)
 				.verifyComplete();
 	}
-	
-	static class TestContainerInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-        @Override
-        public void initialize(ConfigurableApplicationContext applicationContext) {
-            TestPropertyValues
-                .of(
-                    "spring.datasource.username=" + container.getUsername(),
-                    "spring.datasource.password=" + container.getPassword(),
-                    "spring.data.cassandra.contact-points=" + container.getContainerIpAddress(),
-                    "spring.data.cassandra.port=" + container.getMappedPort(9042)
-                )
-                .applyTo(applicationContext.getEnvironment());
-        }
-    }
 
+	@DynamicPropertySource
+	static void configureProperties(DynamicPropertyRegistry registry) {
+		registry.add("spring.cassandra.username", () -> "cassandra");
+		registry.add("spring.cassandra.password", () -> "cassandra");
+		registry.add("spring.cassandra.contact-points", () -> cassandra.getHost() + ":" + cassandra.getMappedPort(9042));
+		registry.add("spring.cassandra.keyspace-name", () -> "customers");
+		registry.add("spring.cassandra.local-datacenter", () -> "datacenter1");
+	}
 }

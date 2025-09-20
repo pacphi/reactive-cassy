@@ -5,13 +5,12 @@ import java.util.UUID;
 import org.springframework.data.cassandra.core.mapping.Column;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
-import org.springframework.hateoas.Identifiable;
 import org.springframework.util.Assert;
 
-import com.datastax.driver.core.utils.UUIDs;
+import com.datastax.oss.driver.api.core.uuid.Uuids;
 
 @Table("customer")
-public class Customer implements Identifiable<UUID>{
+public class Customer {
 
 	@PrimaryKey
 	private UUID id;
@@ -27,15 +26,15 @@ public class Customer implements Identifiable<UUID>{
 		this.firstName = builder.firstName;
 		this.lastName = builder.lastName;
 	}
-	
+
 	private Customer() {}
-	
+
 	private Customer(UUID id, String firstName, String lastName) {
 		this.id = id;
 		this.firstName = firstName;
 		this.lastName = lastName;
 	}
-	
+
 	public static Customer from(Customer customer) {
 		Assert.isTrue(customer.getId() != null, "Customer id must not be null");
 		return new Customer(customer.getId(), customer.getFirstName(), customer.getLastName());
@@ -58,7 +57,7 @@ public class Customer implements Identifiable<UUID>{
 	}
 
 	public static final class Builder {
-		private UUID id = UUIDs.timeBased();
+		private UUID id = Uuids.timeBased();
 		private String firstName;
 		private String lastName;
 
@@ -84,5 +83,5 @@ public class Customer implements Identifiable<UUID>{
 			return new Customer(this);
 		}
 	}
-	
+
 }

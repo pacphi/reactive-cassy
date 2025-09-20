@@ -1,16 +1,28 @@
 spring:
-  data:
-    cassandra:
-      keyspace-name: customers
-      
+  cassandra:
+    keyspace-name: customers
+    connection:
+      init-query-timeout: PT10S
+      connect-timeout: PT10S
+    request:
+      timeout: PT10S
+    session-name: reactive-cassy
+
   jackson:
     default-property-inclusion: NON_NULL
-      
-      
+
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  shutdown: graceful
+  netty:
+    connection-timeout: 2s
+
 management:
   endpoints:
     web:
-      exposure: 
+      exposure:
         include: info,health,metrics,loggers
   endpoint:
     health:
@@ -24,26 +36,40 @@ logging:
     com.datastax: DEBUG
     org.springframework.data.cassandra: DEBUG
     org.springframework.hateoas: DEBUG
-  
+
 ---
 
 spring:
-  profiles: cloud
-  data:
-    cassandra:
-      ssl: true
-      contact-points: ${vcap.services.reactive-cassy-secrets.credentials.CONTACT_POINT}
-      port: ${vcap.services.reactive-cassy-secrets.credentials.PORT}
-      username: ${vcap.services.reactive-cassy-secrets.credentials.USERNAME}
-      password: ${vcap.services.reactive-cassy-secrets.credentials.PASSWORD}
-      
+  config:
+    activate:
+      on-profile: cloud
+  cassandra:
+    ssl:
+      enabled: true
+    contact-points: ${vcap.services.reactive-cassy-secrets.credentials.CONTACT_POINT}
+    port: ${vcap.services.reactive-cassy-secrets.credentials.PORT}
+    username: ${vcap.services.reactive-cassy-secrets.credentials.USERNAME}
+    password: ${vcap.services.reactive-cassy-secrets.credentials.PASSWORD}
+    connection:
+      init-query-timeout: PT10S
+      connect-timeout: PT10S
+    request:
+      timeout: PT10S
+    session-name: reactive-cassy
 ---
 
 spring:
-  profiles: docker
-  data:
-    cassandra:
-      contact-points: 127.0.0.1
-      port: 9042
-      username: cassandra
-      password: cassandra
+  config:
+    activate:
+      on-profile: docker
+  cassandra:
+    contact-points: 127.0.0.1
+    port: 9042
+    username: cassandra
+    password: cassandra
+    connection:
+      init-query-timeout: PT10S
+      connect-timeout: PT10S
+    request:
+      timeout: PT10S
+    session-name: reactive-cassy

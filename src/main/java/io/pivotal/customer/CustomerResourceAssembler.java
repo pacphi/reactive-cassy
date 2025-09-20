@@ -1,17 +1,31 @@
 package io.pivotal.customer;
 
-import org.springframework.hateoas.SimpleIdentifiableResourceAssembler;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
+import java.util.List;
+
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;
 
 @Component
-class CustomerResourceAssembler extends SimpleIdentifiableResourceAssembler<Customer> {
+class CustomerResourceAssembler implements RepresentationModelAssembler<Customer, EntityModel<Customer>> {
 
-	/**
-	 * Link the {@link Customer} domain type to the {@link CustomerEndpoints} using this
-	 * {@link SimpleIdentifiableResourceAssembler} in order to generate both {@link org.springframework.hateoas.Resource}
-	 * and {@link org.springframework.hateoas.Resources}.
-	 */
-	CustomerResourceAssembler() {
-		super(CustomerEndpoints.class);
+	@Override
+	public EntityModel<Customer> toModel(Customer customer) {
+		return EntityModel.of(customer)
+			.add(linkTo(methodOn(CustomerEndpoints.class).getCustomerById(customer.getId())).withSelfRel())
+			.add(linkTo(methodOn(CustomerEndpoints.class).streamAllCustomers()).withRel("customers"));
+	}
+
+	public CollectionModel<EntityModel<Customer>> toCollectionModel(Iterable<? extends Customer> customers) {
+		List<EntityModel<Customer>> customerModels = customers instanceof List ?
+			((List<Customer>) customers).stream().map(this::toModel).toList() :
+			java.util.stream.StreamSupport.stream(customers.spliterator(), false).map(this::toModel).toList();
+
+		return CollectionModel.of(customerModels)
+			.add(linkTo(methodOn(CustomerEndpoints.class).streamAllCustomers()).withSelfRel());
 	}
 }
