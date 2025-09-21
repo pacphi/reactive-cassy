@@ -1,6 +1,6 @@
 # Reactive Cassandra Example
 
-[![Build Status](https://app.travis-ci.com/pacphi/reactive-cassy.svg?branch=main)](https://app.travis-ci.com/pacphi/reactive-cassy) [![Known Vulnerabilities](https://snyk.io/test/github/pacphi/reactive-cassy/badge.svg)](https://snyk.io/test/github/pacphi/reactive-cassy)
+[![CI](https://github.com/pacphi/reactive-cassy/actions/workflows/ci.yml/badge.svg)](https://github.com/pacphi/reactive-cassy/actions/workflows/ci.yml) [![Known Vulnerabilities](https://snyk.io/test/github/pacphi/reactive-cassy/badge.svg)](https://snyk.io/test/github/pacphi/reactive-cassy)
 
 A demonstration project showcasing [Spring Data Cassandra](https://spring.io/projects/spring-data-cassandra) reactive support with modern deployment practices.
 
